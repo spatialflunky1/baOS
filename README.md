@@ -1,6 +1,6 @@
 # baOS
 ## Description
-The BAsic Operating System (baOS) is an operating system built for simple tasks such as:
+The BAsic Operating System (baOS) is [will be] an operating system built for simple tasks such as:
 * Playing a video
 * Listening to audio
 * Or writing a file
