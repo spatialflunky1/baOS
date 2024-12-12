@@ -4,8 +4,14 @@ The BAsic Operating System (baOS) is [will be] an operating system built for sim
 * Playing a video
 * Listening to audio
 * Or writing a file
+## Compiling
+Compilation is as simple as:
+```
+make
+```
+A UEFI bootable iso `baos.iso` will be located in the root of the source tree following compilation
 ## Note:
-* When modifying the source tree run the command below so the editor knows where the inclusions are from
+* When reading the source run the command below so the editor knows where the headers are located
 ```
 bear -- make
 ```
