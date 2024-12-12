@@ -10,6 +10,11 @@ Compilation is as simple as:
 make
 ```
 A UEFI bootable iso `baos.iso` will be located in the root of the source tree following compilation
+## Testing
+To run a test VM with qemu run:
+```
+make qemu
+```
 ## Note:
 * When reading the source run the command below so the editor knows where the headers are located
 ```
