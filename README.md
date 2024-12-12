@@ -10,6 +10,8 @@ The BAsic Operating System (baOS) is [will be] an operating system built for sim
 bear -- make
 ```
 ## Build Dependencies
+- clang
+- lld
 - mtools
 - xorriso
 - OPTIONAL: qemu-system-x86_64

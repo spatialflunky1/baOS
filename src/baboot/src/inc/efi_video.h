@@ -8,5 +8,7 @@ static EFI_SYSTEM_TABLE* sys_table = NULL;
 
 void initializeVideoSysTableVar(EFI_SYSTEM_TABLE* SystemTable); 
 void print(CHAR16* s);
+void print_num(UINT64 n);
+void print_hex(UINT64 h, bool ZeroX);
 
 #endif

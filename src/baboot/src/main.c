@@ -3,7 +3,8 @@
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     // Assign statically defined sys_table variable for use with EFI functions
     initializeVideoSysTableVar(SystemTable); 
-    print(L"Oh my goodness gracious\r\n");
+    print(L"Booting baOS...\r\n");
+    print_hex(0xBEEF, true);
     while(1);
     // Bootloader vars
 
