@@ -8,6 +8,16 @@
     { 0x9042a9de, 0x23dc, 0x4a38, {0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a } }
 
 //
+// EFI Open Protocol Methods
+//
+#define EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL 0x00000001
+#define EFI_OPEN_PROTOCOL_GET_PROTOCOL 0x00000002
+#define EFI_OPEN_PROTOCOL_TEST_PROTOCOL 0x00000004
+#define EFI_OPEN_PROTOCOL_BY_CHILD_CONTROLLER 0x00000008
+#define EFI_OPEN_PROTOCOL_BY_DRIVER 0x00000010
+#define EFI_OPEN_PROTOCOL_EXCLUSIVE 0x00000020
+
+//
 // Miscellaneous
 //
 
@@ -56,15 +66,16 @@ typedef signed int __attribute__((__mode__(__DI__))) INT64;
 
 // Misc. basic
 typedef UINT16 CHAR16;
-typedef UINT8 bool;
+typedef UINT8  bool;
 
 //
 // EFI Types
 //
 
-typedef UINT64   EFI_STATUS;
-typedef UINT64   UINTN;
-typedef void*    EFI_HANDLE;
+typedef UINT64 EFI_STATUS;
+typedef UINT64 UINTN;
+typedef UINT64 EFI_PHYSICAL_ADDRESS;
+typedef void*  EFI_HANDLE;
 
 // EFI locate search type, specifies what to be returned by the search
 typedef enum {
@@ -72,6 +83,24 @@ typedef enum {
     ByRegisterNotify,
     ByProtocol
 } EFI_LOCATE_SEARCH_TYPE;
+
+// Specify the output pixel format
+typedef enum {
+    PixelRedGreenBlueReserved8BitPerColor,
+    PixelBlueGreenRedReserved8BitPerColor,
+    PixelBitMask,
+    PixelBltOnly,
+    PixelFormatMax
+} EFI_GRAPHICS_PIXEL_FORMAT;
+
+// Specify different graphics operations
+typedef enum {
+    EfiBltVideoFill,
+    EfiBltVideoToBltBuffer,
+    EfiBltBufferToVideo,
+    EfiBltVideoToVideo,
+    EfiGraphicsOutputBltOperationMax
+} EFI_GRAPHICS_OUTPUT_BLT_OPERATION;
 
 // Structure of the numeric identify for protocol interfaces
 typedef struct {

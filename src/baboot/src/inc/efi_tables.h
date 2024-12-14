@@ -45,6 +45,49 @@ typedef struct {
     SIMPLE_TEXT_OUTPUT_MODE*     Mode;
 } EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
+// Bit structure of the 2 byte pixel format
+typedef struct {
+    UINT32 RedMask;
+    UINT32 GreenMask;
+    UINT32 BlueMask;
+    UINT32 ReservedMask;
+} EFI_PIXEL_BITMASK;
+
+// Bit structure of a 32 bit BLT pixel
+typedef struct {
+    UINT8 Blue;
+    UINT8 Green;
+    UINT8 Red;
+    UINT8 Reserved;
+} EFI_GRAPHICS_OUTPUT_BLT_PIXEL;
+
+// Graphics information
+typedef struct {
+    UINT32                    Version;
+    UINT32                    HorizontalResolution;
+    UINT32                    VerticalResolution;
+    EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
+    EFI_PIXEL_BITMASK         PixelInformation;
+    UINT32                    PixelsPerScanLine;
+} EFI_GRAPHICS_OUTPUT_MODE_INFORMATION;
+
+typedef struct {
+    UINT32                                MaxMode;
+    UINT32                                Mode;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* Info;
+    UINTN                                 SizeOfInfo;
+    EFI_PHYSICAL_ADDRESS                  FrameBufferBase;
+    UINTN                                 FrameBufferSize;
+} EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE;
+
+// EFI defined graphics protocol 
+typedef struct {
+    EFI_GRAPHICS_OUTPUT_PROTOCOL_QUERY_MODE QueryMode;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL_SET_MODE   SetMode;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL_BLT        Blt;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE*      Mode;
+} EFI_GRAPHICS_OUTPUT_PROTOCOL;
+
 // Table containing the various functions given by the firmware
 // Definitions with the void pointer type are unused and therefore undefined
 typedef struct {
@@ -97,7 +140,7 @@ typedef struct {
     void*                    DisconnectController;
     
     // Open and Close Protocol Services
-    void*                    OpenProtocol;
+    EFI_OPEN_PROTOCOL        OpenProtocol;
     void*                    CloseProtocol;
     void*                    OpenProtocolInformation;
     
