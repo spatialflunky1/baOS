@@ -132,7 +132,7 @@ typedef struct {
 // Table containing the various functions given by the firmware
 // Definitions with the void pointer type are unused and therefore undefined
 typedef struct {
-    EFI_TABLE_HEADER Hdr;
+    EFI_TABLE_HEADER        Hdr;
 
     // Task Priority Services
     void*                   RaiseTPL;

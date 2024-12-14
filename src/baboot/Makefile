@@ -29,6 +29,7 @@ OUTFILE := bootx64.efi
 # -Wextra: Enable extra warnings 
 # -Wmissing-prototypes: Warn of prototypes missing from header
 # -Wstrict-prototypes: Warn of prototype mismatch
+# -D__DEBUG__: Define a macro to print out more detailed information on boot
 CFLAGS := -ffreestanding \
 	      -mno-red-zone \
 	      -I${INC_DIR} \
@@ -38,7 +39,8 @@ CFLAGS := -ffreestanding \
 		  -Wall \
 		  -Wextra \
 		  -Wmissing-prototypes \
-		  -Wstrict-prototypes
+		  -Wstrict-prototypes \
+			-D__DEBUG__
 
 # Link flags (lld)
 # -----------
