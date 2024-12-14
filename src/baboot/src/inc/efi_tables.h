@@ -8,6 +8,11 @@
     #define OPTIONAL
 #endif
 
+// "Compiler" definition for calling conventions
+#ifndef EFIAPI
+    #define EFIAPI
+#endif
+
 #include <efi_datatypes.h>
 
 //
@@ -20,25 +25,25 @@ struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 //
 typedef
 EFI_STATUS
-(*EFI_TEXT_RESET) (
+(EFIAPI *EFI_TEXT_RESET) (
         IN struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This,
         IN bool   ExtendedVerification);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_STRING) (
+(EFIAPI *EFI_TEXT_STRING) (
         IN struct  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This, 
         IN CHAR16* String);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_TEST_STRING) (
+(EFIAPI *EFI_TEXT_TEST_STRING) (
         IN struct  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This, 
         IN CHAR16* String);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_QUERY_MODE) (
+(EFIAPI *EFI_TEXT_QUERY_MODE) (
         IN struct   EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This, 
         IN UINT64   ModeNumber, 
         OUT UINT64* Columns,
@@ -46,33 +51,41 @@ EFI_STATUS
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_SET_MODE) (
+(EFIAPI *EFI_TEXT_SET_MODE) (
         IN struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This, 
         IN UINT64 ModeNumber);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_SET_ATTRIBUTE) (
+(EFIAPI *EFI_TEXT_SET_ATTRIBUTE) (
         IN struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This,
         IN UINT64 Attribute);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_CLEAR_SCREEN) (
+(EFIAPI *EFI_TEXT_CLEAR_SCREEN) (
         IN struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_SET_CURSOR_POSITION) (
+(EFIAPI *EFI_TEXT_SET_CURSOR_POSITION) (
         IN struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This,
         IN UINT64 Column,
         IN UINT64 Row);
 
 typedef
 EFI_STATUS
-(*EFI_TEXT_ENABLE_CURSOR) (
+(EFIAPI *EFI_TEXT_ENABLE_CURSOR) (
         IN struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* This,
         IN bool   Visible);
+
+typedef
+EFI_STATUS
+(EFIAPI *EFI_SET_WATCHDOG_TIMER) (
+        IN UINTN   Timeout,
+        IN UINT64  WatchdogCode,
+        IN UINTN   DataSize,
+        IN CHAR16* WatchdogData OPTIONAL);
 
 
 ///
@@ -116,6 +129,78 @@ typedef struct {
     SIMPLE_TEXT_OUTPUT_MODE*     Mode;
 } EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
+// Table containing the various functions given by the firmware
+// Definitions with the void pointer type are unused and therefore undefined
+typedef struct {
+    EFI_TABLE_HEADER Hdr;
+
+    // Task Priority Services
+    void*                   RaiseTPL;
+    void*                   RestoreTPL;
+    
+    // Memory Services
+    void*                   AllocatePages;
+    void*                   FreePages;
+    void*                   GetMemoryMap;
+    void*                   AllocatePool;
+    void*                   FreePool;
+    
+    // Event & Timer Services
+    void*                   CreateEvent;
+    void*                   SetTimer;
+    void*                   WaitForEvent;
+    void*                   SignalEvent;
+    void*                   CloseEvent;
+    void*                   CheckEvent;
+    
+    // Protocol Handler Services
+    void*                   InstallProtocolInterface;
+    void*                   ReinstallProtocolInterface;
+    void*                   UninstallProtocolInterface;
+    void*                   HandleProtocol;
+    void*                   Reserved;
+    void*                   RegisterProtocolNotify;
+    void*                   LocateHandle;
+    void*                   LocateDevicePath;
+    void*                   InstallConfigurationTable;
+    
+    // Image Services
+    void*                   LoadImage;
+    void*                   StartImage;
+    void*                   Exit;
+    void*                   UnloadImage;
+    void*                   ExitBootServices;
+    
+    // Miscellaneous Services
+    void*                   GetNextMonotonicCount;
+    void*                   Stall;
+    EFI_SET_WATCHDOG_TIMER  SetWatchdogTimer;
+    
+    // DriverSupport Services
+    void*                   ConnectController;
+    void*                   DisconnectController;
+    
+    // Open and Close Protocol Services
+    void*                   OpenProtocol;
+    void*                   CloseProtocol;
+    void*                   OpenProtocolInformation;
+    
+    // Library Services
+    void*                   ProtocolsPerHandle;
+    void*                   LocateHandleBuffer;
+    void*                   LocateProtocol;
+    void*                   InstallMultipleProtocolInterfaces;
+    void*                   UninstallMultipleProtocolInterfaces;
+    
+    // 32-bit CRC Services
+    void*                   CalculateCrc32;
+    
+    // Miscellaneous Services
+    void*                   CopyMem;
+    void*                   SetMem;
+    void*                   CreateEventEx;
+} EFI_BOOT_SERVICES;
+
 // The main system table used by the bootloader
 // Contains critical function addresses
 // Definitions with the void pointer type are unused and therefore undefined
@@ -130,7 +215,7 @@ typedef struct {
     EFI_HANDLE                       StandardErrorHandle;
     void*                            StdErr;
     void*                            RuntimeServices;
-    void*                            BootServices;
+    EFI_BOOT_SERVICES*               BootServices;
     UINTN                            NumberOfTableEntries;
     void*                            ConfigurationTable;
 } EFI_SYSTEM_TABLE;
