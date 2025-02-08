@@ -1,8 +1,15 @@
 #ifndef EFI_VIDEO_H
 #define EFI_VIDEO_H
 
-#include <efi_datatypes.h>
-#include <efi_tables.h>
+#include <firmware/efi_datatypes.h>
+#include <firmware/efi_tables.h>
+
+//
+// Graphics related macros
+//
+
+// Tells the open protocol function to utilize the handle
+#define EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL 0x00000001
 
 // Structure to hold graphics handles returned by LocateHandleBuffer
 typedef struct {

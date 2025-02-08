@@ -2,7 +2,7 @@
 #define EFI_STATUS_H
 
 // Helping macro functions
-#define EFI_ERROR(a) (a < 0)
+#define EFI_ERROR(a) ((a & 0x8000000000000000) != 0)
 #define EFIERR(a)    (EFI_STATUS)(0x8000000000000000 | a)
 #define ERRCODE(a)   (a & 0b0111111111111111111111111111111111111111111111111111111111111111)
 

@@ -1,4 +1,4 @@
-#include <efi_video.h>
+#include <firmware/efi_video.h>
 
 void initializeVideoSysTableVar(EFI_SYSTEM_TABLE *SystemTable) {
     sys_table = SystemTable;
