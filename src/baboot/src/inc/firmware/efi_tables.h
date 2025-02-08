@@ -124,7 +124,7 @@ typedef struct {
     // Memory Services
     EFI_ALLOCATE_PAGES       AllocatePages;
     EFI_FREE_PAGES           FreePages;
-    void*                    GetMemoryMap;
+    EFI_GET_MEMORY_MAP       GetMemoryMap;
     EFI_ALLOCATE_POOL        AllocatePool;
     EFI_FREE_POOL            FreePool;
     
@@ -152,7 +152,7 @@ typedef struct {
     void*                    StartImage;
     void*                    Exit;
     void*                    UnloadImage;
-    void*                    ExitBootServices;
+    EFI_EXIT_BOOT_SERVICES   ExitBootServices;
     
     // Miscellaneous Services
     void*                    GetNextMonotonicCount;
@@ -202,5 +202,14 @@ typedef struct {
     UINTN                            NumberOfTableEntries;
     void*                            ConfigurationTable;
 } EFI_SYSTEM_TABLE;
+
+// Firmware paging memory descriptor
+typedef struct {
+    UINT32               Type;
+    EFI_PHYSICAL_ADDRESS PhysicalStart;
+    EFI_VIRTUAL_ADDRESS  VirtualStart;
+    UINT64               NumberOfPages;
+    UINT64               Attribute;
+} EFI_MEMORY_DESCRIPTOR;
 
 #endif

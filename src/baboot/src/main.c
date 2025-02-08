@@ -7,6 +7,14 @@
 
 #define KERNEL_FILEPATH L"\\baos_kernel.elf"
 
+// Forward declaration
+EFI_STATUS ReadMemoryMap(EFI_SYSTEM_TABLE* SystemTable,
+                        void**            MemoryMap,
+                        UINT64*           MemoryMapSize,
+                        UINT64*           MemoryMapKey,
+                        UINT64*           DescriptorSize,
+                        UINT32*           DescriptorVersion);
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     //
     // Bootloader vars
@@ -24,8 +32,16 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FileSystemProtocol;
     // To store the address to the root of the boot volume
     EFI_FILE_PROTOCOL*               RootFileSystem;
-    // Address that the kernel is loaded into 
+    // Address that the kernel is loaded into, and which the entry function is located 
     EFI_PHYSICAL_ADDRESS*            KernelEntryPoint                 = NULL;
+    // Function pointer to load the function as referenced in the previous comment
+    int (*kernel_entry_point)(void);
+    // Contains info on the currently operating firmware memor map
+    EFI_MEMORY_DESCRIPTOR*           MemoryMap                        = NULL;
+    UINT64                           MemoryMapSize                    = 0;
+    UINT64                           MemoryMapKey                     = 0;
+    UINT64                           DescriptorSize                   = 0;
+    UINT32                           DescriptorVersion                = 0;
 
     // Assign statically defined sys_table variable for use with EFI functions
     initializeVideoSysTableVar(SystemTable);
@@ -165,19 +181,75 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         print(L"Fatal: Unable to load baOS kernel\r\n");
         while(1);
     }
-    while (1);
-    
+
+    //
+    // Get the firmware memory map
+    //
+    #ifdef __DEBUG__
+        print(L"DEBUG: Saving the current firmware memory map and exiting EFI boot services\r\n");
+    #endif
+    // Request the memory map once to obtain the size
+    status = SystemTable->BootServices->GetMemoryMap(&MemoryMapSize,
+                                                     (struct EFI_MEMORY_DESCRIPTOR*)MemoryMap,
+                                                     &MemoryMapKey,
+                                                     &DescriptorSize,
+                                                     &DescriptorVersion);
+    // The second conditional is to ignore the error given when the buffer is too small
+    // This is because the buffer size starts with 0 in order to obtain the required size
+    if (EFI_ERROR(status) && ((status & 0x5) == 0)) {
+        print(L"Fatal: Error while requesting the memory map from firmware\r\n");
+        while(1);
+    }
+
+    // Allocate a buffer to contain the map using the previously obtained size
+    // 2 more page memory descriptors may be created while allocated the new pool of memory
+    MemoryMapSize += (2 * DescriptorSize);
+    status = SystemTable->BootServices->AllocatePool(EfiLoaderData,
+                                                     MemoryMapSize,
+                                                     (void**)&MemoryMap);
+    if (EFI_ERROR(status)) {
+        print(L"Fatal: Error while allocating memory for the buffer to store the firmware memory map\r\n");
+        while(1);
+    }
+
+    // Read the memory map into the previously allocated buffer
+    status = SystemTable->BootServices->GetMemoryMap(&MemoryMapSize,
+                                                     (struct EFI_MEMORY_DESCRIPTOR*)MemoryMap,
+                                                     &MemoryMapKey,
+                                                     &DescriptorSize,
+                                                     &DescriptorVersion);
+    if (EFI_ERROR(status)) {
+        print(L"Fatal: Error while requesting the memory map from firmware\r\n");
+        while(1);
+    }
+    /*-------------------------------WARNING-------------------------------
+     * FROM THIS POINT ANY MESSAGE PRINTED WILL AFFECT THE MemoryMapKey AND
+     * CAUSE ExitBootServices TO FAIL
+     *
+     * Furthermore, any firmware print statements after a successful call to
+     * ExitBootServices will cause a crash
+     *---------------------------------------------------------------------*/
 
     //
     // Exit EFI boot services
     //
-    
+    status = SystemTable->BootServices->ExitBootServices(ImageHandle, MemoryMapKey);
+    if (EFI_ERROR(status)) {
+        print(L"Fatal: An unexpected error ocurred while exiting EFI boot services\r\n");
+        print_hex(status, true);
+        while (1);
+    }    
 
     //
     // Enter Kernel
     //
+    kernel_entry_point = (int (*)(void))*KernelEntryPoint;
+    int return_code = kernel_entry_point();
     
-
-    // Return on error as the system should never reach this point
-    return EFI_LOAD_ERROR;
+    if (return_code == 0) {
+        return EFI_SUCCESS;
+    }
+    else {
+        return EFI_LOAD_ERROR;
+    }
 }

@@ -92,6 +92,7 @@ typedef UINT8 bool;
 
 typedef UINT64   EFI_STATUS;
 typedef UINT64   EFI_PHYSICAL_ADDRESS;
+typedef UINT64   EFI_VIRTUAL_ADDRESS;
 typedef UINT64   UINTN;
 typedef void*    EFI_HANDLE;
 

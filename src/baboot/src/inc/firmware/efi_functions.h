@@ -12,6 +12,7 @@ struct EFI_GRAPHICS_OUTPUT_PROTOCOL;
 struct EFI_GRAPHICS_OUTPUT_BLT_PIXEL;
 struct EFI_SIMPLE_FILE_SYSTEM_PROTOCOL;
 struct EFI_FILE_PROTOCOL;
+struct EFI_MEMORY_DESCRIPTOR;
 
 //
 // EFI Firmware Given Function Declarations (for tables)
@@ -206,5 +207,20 @@ EFI_STATUS
         IN void* Buffer,
         IN UINTN Size,
         IN UINT8 Value);
+
+typedef 
+EFI_STATUS
+(EFIAPI *EFI_GET_MEMORY_MAP) (
+        IN OUT UINTN*                        MemoryMapSize,
+        IN OUT struct EFI_MEMORY_DESCRIPTOR* MemoryMap,
+        OUT    UINTN*                        MapKey,
+        OUT    UINTN*                        DescriptorSize,
+        OUT    UINT32*                       DescriptorVersion);
+
+typedef 
+EFI_STATUS
+(EFIAPI *EFI_EXIT_BOOT_SERVICES) (
+        IN EFI_HANDLE ImageHandle,
+        IN UINTN      MapKey);
 
 #endif
