@@ -5,6 +5,23 @@
 #include <elf.h>
 
 //
+// Tables for post-bootloader info storage
+//
+typedef struct {
+    void*  FramebufferPointer;
+    UINT32 HorizontalResolution;
+    UINT32 VerticalResolution;
+    UINT32 PixelsPerScanline;
+} KERNEL_BOOT_VIDEO_MODE_INFO;
+
+typedef struct {
+    EFI_MEMORY_DESCRIPTOR*      MemoryMap;
+    UINT64                      MemoryMapSize;
+    UINT64                      MemoryMapDescriptorSize;
+    KERNEL_BOOT_VIDEO_MODE_INFO VideoModeInfo;
+} KERNEL_BOOT_INFO;
+
+//
 // Functions for loading the kernel into memory space
 //
 

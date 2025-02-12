@@ -35,13 +35,15 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     // Address that the kernel is loaded into, and which the entry function is located 
     EFI_PHYSICAL_ADDRESS*            KernelEntryPoint                 = NULL;
     // Function pointer to load the function as referenced in the previous comment
-    int (*kernel_entry_point)(void);
+    int (*kernel_entry_point)(KERNEL_BOOT_INFO* BootInfo);
     // Contains info on the currently operating firmware memor map
     EFI_MEMORY_DESCRIPTOR*           MemoryMap                        = NULL;
     UINT64                           MemoryMapSize                    = 0;
     UINT64                           MemoryMapKey                     = 0;
     UINT64                           DescriptorSize                   = 0;
     UINT32                           DescriptorVersion                = 0;
+    // Info from the bootloader that needs to be transfered to the kernel will be kept in this structure
+    KERNEL_BOOT_INFO                 BootInfo;
 
     // Assign statically defined sys_table variable for use with EFI functions
     initializeVideoSysTableVar(SystemTable);
@@ -132,7 +134,17 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     //
     // Save Graphics Info for Later Use in the Kernel
     //
-   
+    BootInfo.VideoModeInfo.FramebufferPointer =
+        (void*)GraphicsOutputProtocol->Mode->FrameBufferBase;
+
+    BootInfo.VideoModeInfo.HorizontalResolution =
+        GraphicsOutputProtocol->Mode->Info->HorizontalResolution;
+
+    BootInfo.VideoModeInfo.VerticalResolution =
+        GraphicsOutputProtocol->Mode->Info->VerticalResolution;
+
+    BootInfo.VideoModeInfo.PixelsPerScanline =
+        GraphicsOutputProtocol->Mode->Info->PixelsPerScanline;
 
     //
     // Obtain ACPI XSDP Table
@@ -238,13 +250,26 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         print(L"Fatal: An unexpected error ocurred while exiting EFI boot services\r\n");
         print_hex(status, true);
         while (1);
-    }    
+    }
+
+    //
+    // Save memory map for kernel
+    //
+    BootInfo.MemoryMap = MemoryMap;
+    BootInfo.MemoryMapSize = MemoryMapSize;
+    BootInfo.MemoryMapDescriptorSize = DescriptorSize;
 
     //
     // Enter Kernel
     //
-    kernel_entry_point = (int (*)(void))*KernelEntryPoint;
-    int return_code = kernel_entry_point();
+    kernel_entry_point = (int (*)(KERNEL_BOOT_INFO* BootInfo))*KernelEntryPoint;
+
+    // The kernel is compiled using the System V calling convention which does not match the bootloader
+    // BootInfo must therefore be passed into the RDI register directly
+    __asm__ volatile ("mov %0, %%rdi" :: "r"(&BootInfo));
+
+    // Can still pass as a parameter as a just in case measure
+    int return_code = kernel_entry_point(&BootInfo);
     
     if (return_code == 0) {
         return EFI_SUCCESS;

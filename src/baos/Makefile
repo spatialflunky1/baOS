@@ -10,7 +10,7 @@ CC := clang
 #
 # File/directory definitions
 #
-C_SRC = $(wildcard src/*/*.c)
+C_SRC = $(wildcard src/*/*.c src/drivers/*/*.c)
 OBJ = $(C_SRC:src/%.c=obj/%.o)
 INC_DIR := src/inc
 OUTFILE := baos_kernel.elf
