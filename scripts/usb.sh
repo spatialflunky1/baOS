@@ -64,8 +64,8 @@ sudo mount -v $EFI_PART temp
 sudo mkdir -pv temp/EFI/BOOT
 
 # Copy {kernel.elf,BOOTX64.EFI} to temp/EFI/BOOT
-sudo cp -v BOOTX64.EFI temp/EFI/BOOT
-sudo cp -v kernel.elf temp
+sudo cp -v src/baboot/bin/bootx64.efi temp/EFI/BOOT
+sudo cp -v src/baos/bin/baos_kernel.elf temp
 
 # umount temp
 sudo umount temp

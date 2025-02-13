@@ -45,11 +45,7 @@ typedef struct {
     SIMPLE_TEXT_OUTPUT_MODE*     Mode;
 } EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
-<<<<<<< HEAD:src/baboot/src/inc/firmware/efi_tables.h
-// Struct describing the pixel bitmask for a graphics mode
-=======
 // Bit structure of the 2 byte pixel format
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439:src/baboot/src/inc/efi_tables.h
 typedef struct {
     UINT32 RedMask;
     UINT32 GreenMask;
@@ -57,11 +53,7 @@ typedef struct {
     UINT32 ReservedMask;
 } EFI_PIXEL_BITMASK;
 
-<<<<<<< HEAD:src/baboot/src/inc/firmware/efi_tables.h
-//
-=======
 // Bit structure of a 32 bit BLT pixel
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439:src/baboot/src/inc/efi_tables.h
 typedef struct {
     UINT8 Blue;
     UINT8 Green;
@@ -69,30 +61,18 @@ typedef struct {
     UINT8 Reserved;
 } EFI_GRAPHICS_OUTPUT_BLT_PIXEL;
 
-<<<<<<< HEAD:src/baboot/src/inc/firmware/efi_tables.h
 // Contains the information describing a returned graphics mode
-=======
-// Graphics information
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439:src/baboot/src/inc/efi_tables.h
 typedef struct {
     UINT32                    Version;
     UINT32                    HorizontalResolution;
     UINT32                    VerticalResolution;
     EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
     EFI_PIXEL_BITMASK         PixelInformation;
-<<<<<<< HEAD:src/baboot/src/inc/firmware/efi_tables.h
     UINT32                    PixelsPerScanline;
 } EFI_GRAPHICS_OUTPUT_MODE_INFORMATION;
 
 typedef struct {
     UINT32                                MaxMode; // # of modes supported by (query/set)mode
-=======
-    UINT32                    PixelsPerScanLine;
-} EFI_GRAPHICS_OUTPUT_MODE_INFORMATION;
-
-typedef struct {
-    UINT32                                MaxMode;
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439:src/baboot/src/inc/efi_tables.h
     UINT32                                Mode;
     EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* Info;
     UINTN                                 SizeOfInfo;
@@ -100,11 +80,7 @@ typedef struct {
     UINTN                                 FrameBufferSize;
 } EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE;
 
-<<<<<<< HEAD:src/baboot/src/inc/firmware/efi_tables.h
 // Provides the ability to set video modes and access the framebufffer
-=======
-// EFI defined graphics protocol 
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439:src/baboot/src/inc/efi_tables.h
 typedef struct {
     EFI_GRAPHICS_OUTPUT_PROTOCOL_QUERY_MODE QueryMode;
     EFI_GRAPHICS_OUTPUT_PROTOCOL_SET_MODE   SetMode;
@@ -112,7 +88,6 @@ typedef struct {
     EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE*      Mode;
 } EFI_GRAPHICS_OUTPUT_PROTOCOL;
 
-<<<<<<< HEAD:src/baboot/src/inc/firmware/efi_tables.h
 typedef struct _EFI_FILE_PROTOCOL {
     UINT64 Revision;
     EFI_FILE_OPEN         Open;
@@ -137,8 +112,6 @@ typedef struct _EFI_SIMPLE_FILE_SYSTEM_PROTOCOL {
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_OPEN_VOLUME OpenVolume;
 } EFI_SIMPLE_FILE_SYSTEM_PROTOCOL;
 
-=======
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439:src/baboot/src/inc/efi_tables.h
 // Table containing the various functions given by the firmware
 // Definitions with the void pointer type are unused and therefore undefined
 typedef struct {

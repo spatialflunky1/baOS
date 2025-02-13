@@ -21,7 +21,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     //
     
     // To store the returned status of various functions
-<<<<<<< HEAD
     EFI_STATUS                       status                           = EFI_SUCCESS;
     // To store graphics handles recieved from firmware
     EfiGraphicsService               GraphicsService;
@@ -45,18 +44,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     UINT32                           DescriptorVersion                = 0;
     // Info from the bootloader that needs to be transfered to the kernel will be kept in this structure
     KERNEL_BOOT_INFO                 BootInfo;
-=======
-    EFI_STATUS                    status                 = EFI_SUCCESS;
-    // To store graphics handles
-    EfiGraphicsService            GraphicsService;
-    // To store the address of the opened protocol
-    EFI_GRAPHICS_OUTPUT_PROTOCOL* GraphicsOutputProtocol = NULL;
-
-
-    //
-    // Code Initialization
-    //
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439
 
     // Assign statically defined sys_table variable for use with EFI functions
     initializeVideoSysTableVar(SystemTable);
@@ -76,27 +63,17 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         print(L"Fatal: Error while disabling watchdog\r\n");
         while(1);
     }
-<<<<<<< HEAD
-    
-=======
 
-
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439
     //
     // Initialize Graphics Output Protocol
     //
     #ifdef __DEBUG__
         print(L"DEBUG: Initializing the graphics output protocol service\r\n");
     #endif
-<<<<<<< HEAD
     // Get all graphics service handle buffers for the active console
-=======
-
-    // Get the graphics service handle buffers
     #ifdef __DEBUG__
         print(L"  DEBUG: Locating the graphics service handle buffers\r\n");
     #endif
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439
     status = SystemTable->BootServices->LocateHandleBuffer(
             ByProtocol,
             &gEfiGraphicsOutputProtocolGuid,
@@ -110,19 +87,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         else {
             print(L"Fatal: Unable to locate graphics device\r\n");
         }
-<<<<<<< HEAD
         while(1);
-=======
-        return status;
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439
     }
     if (GraphicsService.handle_count == 0) {
         print(L"Fatal: Error locating any graphics output protocol handles\r\n");
         while(1);
     }
 
-<<<<<<< HEAD
-=======
     // Open the graphics output protocol on the first obtained buffer
     #ifdef __DEBUG__
         print(L"  DEBUG: Opening the graphics output protocol on the first obtained buffer\r\n");
@@ -138,9 +109,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         print(L"Fatal: Failed to open graphics output protocol on the current console\r\n");
         while(1);
     }
-    while (1);
->>>>>>> d46b6778b2094bcfefd82161cf7a532137177439
-
 
     //
     // Open the first Graphics Output Protocol from the returned buffer
