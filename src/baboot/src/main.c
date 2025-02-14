@@ -27,15 +27,18 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     // Provides the ability to set video modes and access the framebuffer
     EFI_GRAPHICS_OUTPUT_PROTOCOL*    GraphicsOutputProtocol           = NULL;
     // The UEFI standard requires a variable to store GUID values
+    EFI_GUID                         gEfiLoadedImageProtocolGuid      = EFI_LOADED_IMAGE_PROTOCOL_GUID;
     EFI_GUID                         gEfiSimpleFileSystemProtocolGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+    // Pointer to the interface of the loaded image protocol, used to get FS root
+    EFI_LOADED_IMAGE_PROTOCOL*       LoadedImageProtocol              = NULL;
     // Pointer to the structure that contains the function to open fs volumes
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FileSystemProtocol;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FileSystemProtocol               = NULL;
     // To store the address to the root of the boot volume
-    EFI_FILE_PROTOCOL*               RootFileSystem;
+    EFI_FILE_PROTOCOL*               RootFileSystem                   = NULL;
     // Address that the kernel is loaded into, and which the entry function is located 
     EFI_PHYSICAL_ADDRESS*            KernelEntryPoint                 = NULL;
     // Function pointer to load the function as referenced in the previous comment
-    int (*kernel_entry_point)(KERNEL_BOOT_INFO* BootInfo);
+    int (*kernel_entry_point)(KERNEL_BOOT_INFO* BootInfo)             = NULL;
     // Contains info on the currently operating firmware memor map
     EFI_MEMORY_DESCRIPTOR*           MemoryMap                        = NULL;
     UINT64                           MemoryMapSize                    = 0;
@@ -178,12 +181,27 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     #ifdef __DEBUG__
         print(L"DEBUG: Loading EFI filesystem\r\n");
     #endif
-    status = SystemTable->BootServices->LocateProtocol(
-            &gEfiSimpleFileSystemProtocolGuid,
+    status = SystemTable->BootServices->OpenProtocol(
+            ImageHandle,
+            &gEfiLoadedImageProtocolGuid,
+            (void**)&LoadedImageProtocol,
+            ImageHandle,
             NULL,
-            (void**)&FileSystemProtocol);
+            EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);                 
     if (EFI_ERROR(status)) {
-        print(L"Fatal: Firmware error locating a protocol to load the EFI filesystem\r\n");
+        print(L"Fatal: Firmware error opening the loaded image protocol from the EFI image\r\n");
+        while(1);
+    }
+
+    status = SystemTable->BootServices->OpenProtocol(
+            LoadedImageProtocol->DeviceHandle,
+            &gEfiSimpleFileSystemProtocolGuid,
+            (void**)&FileSystemProtocol,
+            ImageHandle,
+            NULL,
+            EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+    if (EFI_ERROR(status)) {
+        print(L"Fatal: Unable to open the file system protocol from the device listed by the EFI image\r\n");
         while(1);
     }
 

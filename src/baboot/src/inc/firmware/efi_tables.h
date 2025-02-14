@@ -212,4 +212,27 @@ typedef struct {
     UINT64               Attribute;
 } EFI_MEMORY_DESCRIPTOR;
 
+// Protocol given by the ImageHandle, used to get the root filesystem of the loaded Image
+typedef struct {
+    UINT32                    Revision;
+    EFI_HANDLE                ParentHandle;
+    EFI_SYSTEM_TABLE*         SystemTable;
+
+    // Source location of the image
+    EFI_HANDLE                DeviceHandle;
+    void*                     FilePath; // Unused, type: EFI_DEVICE_PATH_PROTOCOL*
+    void*                     Reserved;
+    
+    // Image's load options 
+    UINT32                    LoadOptionsSize;
+    void*                     LoadOptions;
+
+    // Location where the image was loaded
+    void*                     ImageBase;
+    UINT64                    ImageSize;
+    EFI_MEMORY_TYPE           ImageCodeType;
+    EFI_MEMORY_TYPE           ImageDataType;
+    void*                     Unload; // Unused function, type: EFI_IMAGE_UNLOAD
+} EFI_LOADED_IMAGE_PROTOCOL;
+
 #endif
