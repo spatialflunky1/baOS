@@ -55,7 +55,7 @@ qemu: all
 
 # Output total line count
 wc:
-	wc -l `find src`
+	wc -l `find src` 2>/dev/null
 
 # Run the script that flashes the system to a usb
 usb: all
