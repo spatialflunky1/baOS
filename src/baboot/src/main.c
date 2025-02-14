@@ -65,6 +65,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while disabling watchdog\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -92,11 +93,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             print(L"Fatal: Unable to locate graphics device\r\n");
         }
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
     if (GraphicsService.handle_count == 0) {
         print(L"Fatal: Error locating any graphics output protocol handles\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -114,6 +117,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Failed to open graphics output protocol on the current console\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -130,6 +134,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Failed to open graphics output protocol on the current console\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
     
@@ -144,6 +149,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error setting graphics output mode\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
    
@@ -152,6 +158,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error resetting console graphics device\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -159,6 +166,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if ((void*)GraphicsOutputProtocol->Mode->FrameBufferBase == NULL) {
         print(L"Fatal: No framebuffer address was found for the kernel\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
     
@@ -199,6 +207,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Firmware error opening the loaded image protocol from the EFI image\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -212,6 +221,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to open the file system protocol from the device listed by the EFI image\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -227,6 +237,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error when opeining EFI boot volume\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
     #ifdef __DEBUG__
@@ -261,6 +272,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status) && ((status & 0x5) == 0)) {
         print(L"Fatal: Error while requesting the memory map from firmware\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -273,6 +285,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while allocating memory for the buffer to store the firmware memory map\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
 
@@ -285,6 +298,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while requesting the memory map from firmware\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while(1);
     }
     /*-------------------------------WARNING-------------------------------
@@ -302,6 +316,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     if (EFI_ERROR(status)) {
         print(L"Fatal: An unexpected error ocurred while exiting EFI boot services\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         while (1);
     }
 

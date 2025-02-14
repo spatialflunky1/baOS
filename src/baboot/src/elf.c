@@ -108,6 +108,7 @@ EFI_STATUS read_elf_headers(EFI_SYSTEM_TABLE*  SystemTable,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error setting kernel image file pointer position\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
     
@@ -126,6 +127,7 @@ EFI_STATUS read_elf_headers(EFI_SYSTEM_TABLE*  SystemTable,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error allocating memory for kernel ELF header\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
     
@@ -137,6 +139,7 @@ EFI_STATUS read_elf_headers(EFI_SYSTEM_TABLE*  SystemTable,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error reading kernel ELF header\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
     
@@ -159,6 +162,7 @@ EFI_STATUS read_elf_headers(EFI_SYSTEM_TABLE*  SystemTable,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error allocating memory for kernel ELF program headers\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
 
@@ -178,6 +182,7 @@ EFI_STATUS read_elf_headers(EFI_SYSTEM_TABLE*  SystemTable,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error reading kernel ELF program headers\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
 
@@ -203,8 +208,10 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
     status = KernelImage->SetPosition((struct EFI_FILE_PROTOCOL*)KernelImage, ProgramHeader->p_offset);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error setting kernel file position to program segment offset: ");
-        print_hex(status, true);
         print_hex(ProgramHeader->p_offset, true);
+        print(L"\r\n");
+        print(L"Err ");
+        print_hex(status, true);
         print(L"\r\n");
     }
 
@@ -219,6 +226,7 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
         if (EFI_ERROR(status)) {
             print(L"Fatal: Error while allocating memory for a kernel program segment buffer\r\n");
             print_hex(status, true);
+            print(L"\r\n");
             return status;
         }
     
@@ -230,6 +238,7 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
         if (EFI_ERROR(status)) {
             print(L"Fatal: Error while allocating pages for a kernel program segment\r\n");
             print_hex(status, true);
+            print(L"\r\n");
             return status;
         }
 
@@ -240,6 +249,7 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
         if (EFI_ERROR(status)) {
             print(L"Fatal: Error while reading a program segment from the kernel image file\r\n");
             print_hex(status, true);
+            print(L"\r\n");
             return status;
         }
 
@@ -250,6 +260,7 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
         if (EFI_ERROR(status)) {
             print(L"Fatal: Error while copying memory from program segment buffer into memory page\r\n");
             print_hex(status, true);
+            print(L"\r\n");
             return status;
         }
     
@@ -258,6 +269,7 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
         if (EFI_ERROR(status)) {
             print(L"Fatal: Error while freeing the buffer for a kernel program segment\r\n");
             print_hex(status, true);
+            print(L"\r\n");
             return status;
         }
     }
@@ -271,6 +283,7 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
         if (EFI_ERROR(status)) {
             print(L"Fatal: Error while zero filling the memory location after a kernel program segment\r\n");
             print_hex(status, true);
+            print(L"\r\n");
             return status;
         }
     }

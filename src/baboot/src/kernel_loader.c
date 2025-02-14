@@ -49,11 +49,11 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
             print(L"Error: Kernel image file not found\r\n");
         }
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
     if (KernelImage == NULL) {
         print(L"Fatal: Unknown error locating kernel image\r\n");
-        print_hex(status, true);
         return EFI_NOT_FOUND;
     }
     #ifdef __DEBUG__
@@ -74,6 +74,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to allocate memory for kernel ELF identity\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
 
@@ -95,6 +96,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to free buffer used by kernel ELF identity\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
     
@@ -145,6 +147,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while closing closing the previously opened kernel image file\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
 
@@ -153,6 +156,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while freeing the buffer storing the kernel ELF header\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
 
@@ -161,6 +165,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while freeing the buffer storing the kernel ELF program headers\r\n");
         print_hex(status, true);
+        print(L"\r\n");
         return status;
     }
 
