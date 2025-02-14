@@ -64,6 +64,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     status = SystemTable->BootServices->SetWatchdogTimer(0,0,0,NULL);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while disabling watchdog\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -90,10 +91,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         else {
             print(L"Fatal: Unable to locate graphics device\r\n");
         }
+        print_hex(status, true);
         while(1);
     }
     if (GraphicsService.handle_count == 0) {
         print(L"Fatal: Error locating any graphics output protocol handles\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -110,6 +113,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Failed to open graphics output protocol on the current console\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -125,6 +129,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Failed to open graphics output protocol on the current console\r\n");
+        print_hex(status, true);
         while(1);
     }
     
@@ -138,6 +143,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             2);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error setting graphics output mode\r\n");
+        print_hex(status, true);
         while(1);
     }
    
@@ -145,12 +151,14 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     status = SystemTable->ConOut->Reset((struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*)SystemTable->ConOut, true);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error resetting console graphics device\r\n");
+        print_hex(status, true);
         while(1);
     }
 
     // Return when framebuffer is null
     if ((void*)GraphicsOutputProtocol->Mode->FrameBufferBase == NULL) {
         print(L"Fatal: No framebuffer address was found for the kernel\r\n");
+        print_hex(status, true);
         while(1);
     }
     
@@ -190,6 +198,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);                 
     if (EFI_ERROR(status)) {
         print(L"Fatal: Firmware error opening the loaded image protocol from the EFI image\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -202,6 +211,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to open the file system protocol from the device listed by the EFI image\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -216,6 +226,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             (struct EFI_FILE_PROTOCOL**)&RootFileSystem);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error when opeining EFI boot volume\r\n");
+        print_hex(status, true);
         while(1);
     }
     #ifdef __DEBUG__
@@ -249,6 +260,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     // This is because the buffer size starts with 0 in order to obtain the required size
     if (EFI_ERROR(status) && ((status & 0x5) == 0)) {
         print(L"Fatal: Error while requesting the memory map from firmware\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -260,6 +272,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                                                      (void**)&MemoryMap);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while allocating memory for the buffer to store the firmware memory map\r\n");
+        print_hex(status, true);
         while(1);
     }
 
@@ -271,6 +284,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                                                      &DescriptorVersion);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while requesting the memory map from firmware\r\n");
+        print_hex(status, true);
         while(1);
     }
     /*-------------------------------WARNING-------------------------------

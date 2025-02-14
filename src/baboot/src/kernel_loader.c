@@ -48,10 +48,12 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
         if (status == EFI_NOT_FOUND || KernelImage == NULL) {
             print(L"Error: Kernel image file not found\r\n");
         }
+        print_hex(status, true);
         return status;
     }
     if (KernelImage == NULL) {
         print(L"Fatal: Unknown error locating kernel image\r\n");
+        print_hex(status, true);
         return EFI_NOT_FOUND;
     }
     #ifdef __DEBUG__
@@ -71,6 +73,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
             (void**)&ELFIDBuffer);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to allocate memory for kernel ELF identity\r\n");
+        print_hex(status, true);
         return status;
     }
 
@@ -91,6 +94,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     status = SystemTable->BootServices->FreePool(ELFIDBuffer);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to free buffer used by kernel ELF identity\r\n");
+        print_hex(status, true);
         return status;
     }
     
@@ -140,6 +144,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     status = KernelImage->Close((struct EFI_FILE_PROTOCOL*)KernelImage);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while closing closing the previously opened kernel image file\r\n");
+        print_hex(status, true);
         return status;
     }
 
@@ -147,6 +152,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     status = SystemTable->BootServices->FreePool(KernelHeader);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while freeing the buffer storing the kernel ELF header\r\n");
+        print_hex(status, true);
         return status;
     }
 
@@ -154,6 +160,7 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
     status = SystemTable->BootServices->FreePool(KernelProgramHeaders);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while freeing the buffer storing the kernel ELF program headers\r\n");
+        print_hex(status, true);
         return status;
     }
 
