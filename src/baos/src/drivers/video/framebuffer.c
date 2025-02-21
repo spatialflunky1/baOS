@@ -80,9 +80,157 @@ void scroll_down_framebuf(void) {
     }
 }
 
+static int rprintf_dec(uint64_t i, bool sign) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT64_DEC_MAXDIGIT];
+    int16_t  StackTop = -1;
+    if (sign) {
+        if (i > UINT32_MAX) {
+            // Value passed is 64 bits wide
+            i ^= 0xFFFFFFFFFFFFFFFF;
+            i++;
+        }
+        else {
+            // Value passed is 32 bits wide
+            i ^= 0xFFFFFFFF;
+            i++;
+        }
+    }
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (i == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (i != 0) {
+        ++StackTop;
+        StringStack[StackTop] = (char)((i%10) + 48);
+        i /= 10;
+    }
+    
+    if (sign) {
+        // Add negative symbol
+        StackTop++;
+        StringStack[StackTop] = '-';
+    }
+
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t  TempIndex = StackTop;
+    char TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_hex(uint64_t h, bool upper, bool zero_x) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT64_DEC_MAXDIGIT];
+    int16_t  StackTop = -1;
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (h == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (h != 0) {
+        ++StackTop;
+        if ((h%16) < 10) {
+            StringStack[StackTop] = (char)((h%16) + 48);
+        }
+        else {
+            // -10: The first alphabetic letter is located at 65 (A),
+            //      10 marks the first so it needs to be subtracted
+            //      before conversion
+            if (upper) {
+                StringStack[StackTop] = (char)((h%16) + (65 - 10));
+            }
+            else {
+                StringStack[StackTop] = (char)((h%16) + (97 - 10));
+            }
+        }
+        h /= 16;
+    }
+
+    // Add the 0x to the string when necessary
+    // Added here in reverse order as the string is reversed
+    if (zero_x) {
+        StringStack[StackTop+1] = 'x';
+        StringStack[StackTop+2] = '0';
+        StackTop += 2;
+    }
+    
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t TempIndex = StackTop;
+    char    TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+    
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_oct(uint64_t o) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT64_DEC_MAXDIGIT];
+    int16_t  StackTop = -1;
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (o == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (o != 0) {
+        ++StackTop;
+        StringStack[StackTop] = (char)((o%8) + 48);
+        o /= 8;
+    }
+    
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t  TempIndex = StackTop;
+    char TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_float(double d, bool hex, bool upper) {
+
+}
+
+static int rprintf_sci(uint64_t i, bool upper) {
+
+}
+
 int rprintf(const char *restrict format, va_list ap) {
-    int bytes_printed = -1;
-    int current_arg = 0;
+    int bytes_printed = 0;
     char c = 0;
 
     if (FramebufferInfo == NULL || FramebufferInfo->FramebufferPointer == NULL) {
@@ -90,8 +238,96 @@ int rprintf(const char *restrict format, va_list ap) {
     }
 
     while (c = *(format++), c != 0) {
-        if (rputchar(c) == -1) {
-            return -1;
+        // %[argument$][flags][width][.precision][length modifier]conversion
+        // Conversion specifier
+        if (c == '%') {
+            switch (*format) {
+                // Signed decimal integer
+                case 'd':
+                    bytes_printed += rprintf_dec(va_arg(ap, uint64_t), true);
+                    break;
+                // Signed decimal integer
+                case 'i':
+                    bytes_printed += rprintf_dec(va_arg(ap, uint64_t), true);
+                    break;
+                // Unsigned decimal integer
+                case 'u':
+                    bytes_printed += rprintf_dec(va_arg(ap, uint64_t), false);
+                    break;
+                // Unsigned octal
+                case 'o':
+                    bytes_printed += rprintf_oct(va_arg(ap, uint64_t));
+                    break;
+                // Unsigned hexadecimal integer
+                case 'x':
+                    bytes_printed += rprintf_hex(va_arg(ap, uint64_t), false, true);
+                    break;
+                // Unsigned hexadecimal integer (uppercase)
+                case 'X':
+                    bytes_printed += rprintf_hex(va_arg(ap, uint64_t), true, true);
+                    break;
+                // Decimal floating point, lowercase
+                case 'f':
+                    bytes_printed += rprintf_float(va_arg(ap, double), false, false);
+                    break;
+                // Decimal floating point, uppercase
+                case 'F':
+                    bytes_printed += rprintf_float(va_arg(ap, double), false, true);
+                    break;
+                // Scientific notation (mantissa/exponent), lowercase
+                case 'e':
+                    bytes_printed += rprintf_sci(va_arg(ap, uint64_t), false);
+                    break;
+                // Scientific notation (mantissa/exponent), uppercase
+                case 'E':
+                    bytes_printed += rprintf_sci(va_arg(ap, uint64_t), false);
+                    break;
+                // Use the shortest representation: %e or %f
+                case 'g':
+                    break;
+                // Use the shortest representation: %E or %F
+                case 'G':
+                    break;
+                // Hexadecimal floating point, lowercase
+                case 'a':
+                    bytes_printed += rprintf_float(va_arg(ap, double), true, false);
+                    break;
+                // Hexadecimal floating point, uppercase
+                case 'A':
+                    bytes_printed += rprintf_float(va_arg(ap, double), true, true);
+                    break;
+                // Character
+                case 'c':
+                    rputchar(va_arg(ap, int));
+                    bytes_printed++;
+                    break;
+                // String of characters
+                case 's':
+                    bytes_printed += rprintf(va_arg(ap, char*), NULL);
+                    break;
+                // Pointer address
+                case 'p':
+                    bytes_printed += rprintf_hex(va_arg(ap, uint64_t), true, true);
+                    break;
+                // Nothing printed
+                // The corresponding argument must be a pointer to a signed int
+                // The number of characters written so far is stored in the printed location
+                case 'n':
+                    *(va_arg(ap, int*)) = bytes_printed;
+                    break;
+                // Default ignore case for printing the character
+                case '%':
+                    rputchar('%');
+                    bytes_printed++;
+                    break;
+            }
+            // Skip the next character
+            ++format;
+        }
+        else {
+            if (rputchar(c) == -1) {
+                return -1;
+            }
         }
         bytes_printed++;
     }

@@ -47,8 +47,8 @@ CFLAGS := \
 # -T src/kernel/kernel.ld: Specify linker script for layout
 LDFLAGS := \
 		   -ffreestanding \
-		   -no-pie \
 		   -nostdlib \
+			 -no-pie \
 		   -T src/kernel/kernel.ld
 
 all: obj bin bin/${OUTFILE}

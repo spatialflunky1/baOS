@@ -18,7 +18,5 @@ int vprintf(const char *restrict format, va_list ap) {
         bytes_printed = rprintf(format, ap);
     }
 
-    va_end(ap);
-
     return bytes_printed;
 }

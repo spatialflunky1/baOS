@@ -8,10 +8,11 @@ int main(KERNEL_BOOT_INFO* BootInfo) {
     
     printf("baOS kernel successfully loaded\n"); 
    
-    while (true) {
+    /* while (true) {
         printf("123\n");
         printf("1234556\n");
-    } 
+    } */
+    printf("Testing (3.14159):%f", 3.14159);
     while(1);
     return 0;
 }

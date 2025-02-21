@@ -236,7 +236,9 @@ EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable,
                                                           SegmentPageCount,
                                                           (EFI_PHYSICAL_ADDRESS*)&(ProgramHeader->p_paddr));
         if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while allocating pages for a kernel program segment\r\n");
+            print(L"Fatal: Error while allocating pages for a kernel program segment at:\r\n");
+            print_hex(ProgramHeader->p_paddr, true);
+            print(L"\r\n");
             print_hex(status, true);
             print(L"\r\n");
             return status;
