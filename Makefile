@@ -29,18 +29,18 @@ output:
 
 # Kernel
 ${KERNEL_FILE}:
-	make -C src/baos
+	make -C src/kernel
 
 # Bootloader
 ${BOOTLOADER_FILE}:
-	make -C src/baboot
+	make -C src/bootloader
 
 # Clean the project directory and subdirectories
 clean:
 	rm -rf ./output \
 		     ./*.iso
-	make -C src/baboot clean
-	make -C src/baos clean
+	make -C src/bootloader clean
+	make -C src/kernel clean
 
 # Run the system in qemu
 qemu: all
