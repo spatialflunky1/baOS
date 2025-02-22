@@ -4,8 +4,8 @@
 DISK_SIZE=2880
 
 # Target file output definitions
-KERNEL_FILE := src/baos/bin/baos_kernel.elf
-BOOTLOADER_FILE := src/baboot/bin/bootx64.efi
+KERNEL_FILE := src/kernel/bin/baos_kernel.elf
+BOOTLOADER_FILE := src/bootloader/bin/bootx64.efi
 
 # Final goal of compilation is a bootable ISO
 all: baos.iso

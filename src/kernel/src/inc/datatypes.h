@@ -22,6 +22,7 @@ typedef uint8_t bool;
 
 // Max type digits (+1 is to account for signed values having a negative symbol)
 #define UINT64_DEC_MAXDIGIT 20+1
+#define UINT32_DEC_MAXDIGIT 10+1
 #define UINT64_HEX_MAXDIGIT 16+1
 #define UINT32_MAX 4294967295
 

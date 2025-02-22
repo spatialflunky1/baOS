@@ -80,21 +80,48 @@ void scroll_down_framebuf(void) {
     }
 }
 
-static int rprintf_dec(uint64_t i, bool sign) {
+static int rprintf_dec_64_unsigned(uint64_t i) {
     // Create a buffer acting as a stack for digits
     char StringStack[UINT64_DEC_MAXDIGIT];
-    int16_t  StackTop = -1;
-    if (sign) {
-        if (i > UINT32_MAX) {
-            // Value passed is 64 bits wide
-            i ^= 0xFFFFFFFFFFFFFFFF;
-            i++;
-        }
-        else {
-            // Value passed is 32 bits wide
-            i ^= 0xFFFFFFFF;
-            i++;
-        }
+    int16_t StackTop = -1; 
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (i == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (i != 0) {
+        ++StackTop;
+        StringStack[StackTop] = (char)((i%10) + 48);
+        i /= 10;
+    }
+    
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t TempIndex = StackTop;
+    char TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_dec_64_signed(int64_t i) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT64_DEC_MAXDIGIT];
+    int16_t StackTop = -1;
+    bool neg = false;
+    if (i >> 63) {
+            i *= (int64_t)-1;
+            neg = true;
     }
     
     // Add 0 to the stack when the number is 0 as the loop is skipped
@@ -110,14 +137,14 @@ static int rprintf_dec(uint64_t i, bool sign) {
         i /= 10;
     }
     
-    if (sign) {
+    if (neg) {
         // Add negative symbol
         StackTop++;
         StringStack[StackTop] = '-';
     }
 
     // Reverse the character elements of the stack to correctly match the number
-    int16_t  TempIndex = StackTop;
+    int16_t TempIndex = StackTop;
     char TempChar;
     for (; TempIndex > (StackTop / 2); --TempIndex) {
         TempChar = StringStack[StackTop - TempIndex];
@@ -132,7 +159,141 @@ static int rprintf_dec(uint64_t i, bool sign) {
     return rprintf(StringStack, NULL);
 }
 
-static int rprintf_hex(uint64_t h, bool upper, bool zero_x) {
+static int rprintf_dec_32_unsigned(uint32_t i) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT32_DEC_MAXDIGIT];
+    int16_t StackTop = -1;
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (i == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (i != 0) {
+        ++StackTop;
+        StringStack[StackTop] = (char)((i%10) + 48);
+        i /= 10;
+    }
+    
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t TempIndex = StackTop;
+    char TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_dec_32_signed(int32_t i) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT32_DEC_MAXDIGIT];
+    int16_t StackTop = -1;
+    bool neg = false;
+    if (i >> 31) {
+        i *= (int32_t)-1;
+        neg = true;
+    }
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (i == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (i != 0) {
+        ++StackTop;
+        StringStack[StackTop] = (char)((i%10) + 48);
+        i /= 10;
+    }
+    
+    if (neg) {
+        // Add negative symbol
+        StackTop++;
+        StringStack[StackTop] = '-';
+    }
+
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t TempIndex = StackTop;
+    char TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_hex_32(uint32_t h, bool upper, bool zero_x) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT32_DEC_MAXDIGIT];
+    int16_t  StackTop = -1;
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (h == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (h != 0) {
+        ++StackTop;
+        if ((h%16) < 10) {
+            StringStack[StackTop] = (char)((h%16) + 48);
+        }
+        else {
+            // -10: The first alphabetic letter is located at 65 (A),
+            //      10 marks the first so it needs to be subtracted
+            //      before conversion
+            if (upper) {
+                StringStack[StackTop] = (char)((h%16) + (65 - 10));
+            }
+            else {
+                StringStack[StackTop] = (char)((h%16) + (97 - 10));
+            }
+        }
+        h /= 16;
+    }
+
+    // Add the 0x to the string when necessary
+    // Added here in reverse order as the string is reversed
+    if (zero_x) {
+        StringStack[StackTop+1] = 'x';
+        StringStack[StackTop+2] = '0';
+        StackTop += 2;
+    }
+    
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t TempIndex = StackTop;
+    char    TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+    
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_hex_64(uint64_t h, bool upper, bool zero_x) {
     // Create a buffer acting as a stack for digits
     char StringStack[UINT64_DEC_MAXDIGIT];
     int16_t  StackTop = -1;
@@ -187,7 +348,41 @@ static int rprintf_hex(uint64_t h, bool upper, bool zero_x) {
     return rprintf(StringStack, NULL);
 }
 
-static int rprintf_oct(uint64_t o) {
+static int rprintf_oct_32(uint32_t o) {
+    // Create a buffer acting as a stack for digits
+    char StringStack[UINT32_DEC_MAXDIGIT];
+    int16_t  StackTop = -1;
+    
+    // Add 0 to the stack when the number is 0 as the loop is skipped
+    if (o == 0) {
+        ++StackTop;
+        StringStack[StackTop] = '0';
+    }
+
+    // Store the base 10 digits in the stack
+    while (o != 0) {
+        ++StackTop;
+        StringStack[StackTop] = (char)((o%8) + 48);
+        o /= 8;
+    }
+    
+    // Reverse the character elements of the stack to correctly match the number
+    int16_t  TempIndex = StackTop;
+    char TempChar;
+    for (; TempIndex > (StackTop / 2); --TempIndex) {
+        TempChar = StringStack[StackTop - TempIndex];
+        StringStack[StackTop - TempIndex] = StringStack[TempIndex];
+        StringStack[TempIndex] = TempChar;
+    }
+
+    // Add the null byte
+    StringStack[StackTop + 1] = '\0';
+    
+    // Print the created string
+    return rprintf(StringStack, NULL);
+}
+
+static int rprintf_oct_64(uint64_t o) {
     // Create a buffer acting as a stack for digits
     char StringStack[UINT64_DEC_MAXDIGIT];
     int16_t  StackTop = -1;
@@ -221,14 +416,6 @@ static int rprintf_oct(uint64_t o) {
     return rprintf(StringStack, NULL);
 }
 
-static int rprintf_float(double d, bool hex, bool upper) {
-
-}
-
-static int rprintf_sci(uint64_t i, bool upper) {
-
-}
-
 int rprintf(const char *restrict format, va_list ap) {
     int bytes_printed = 0;
     char c = 0;
@@ -236,65 +423,46 @@ int rprintf(const char *restrict format, va_list ap) {
     if (FramebufferInfo == NULL || FramebufferInfo->FramebufferPointer == NULL) {
         return -1;
     }
-
+    
+    bool _long = false;
     while (c = *(format++), c != 0) {
         // %[argument$][flags][width][.precision][length modifier]conversion
         // Conversion specifier
         if (c == '%') {
+            if (*format == 'l') {
+                _long = true;
+                format++;
+            }
             switch (*format) {
                 // Signed decimal integer
                 case 'd':
-                    bytes_printed += rprintf_dec(va_arg(ap, uint64_t), true);
+                    if (_long) bytes_printed += rprintf_dec_64_signed(va_arg(ap, uint64_t));
+                    else bytes_printed += rprintf_dec_32_signed(va_arg(ap, uint32_t)); 
                     break;
                 // Signed decimal integer
                 case 'i':
-                    bytes_printed += rprintf_dec(va_arg(ap, uint64_t), true);
+                    if (_long) bytes_printed += rprintf_dec_64_signed(va_arg(ap, uint64_t));
+                    else bytes_printed += rprintf_dec_32_signed(va_arg(ap, uint32_t));
                     break;
                 // Unsigned decimal integer
                 case 'u':
-                    bytes_printed += rprintf_dec(va_arg(ap, uint64_t), false);
+                    if (_long) bytes_printed += rprintf_dec_64_unsigned(va_arg(ap, uint64_t));
+                    else bytes_printed += rprintf_dec_32_unsigned(va_arg(ap, uint32_t));
                     break;
                 // Unsigned octal
                 case 'o':
-                    bytes_printed += rprintf_oct(va_arg(ap, uint64_t));
+                    if (_long) bytes_printed += rprintf_oct_64(va_arg(ap, uint64_t));
+                    else bytes_printed += rprintf_oct_32(va_arg(ap, uint32_t));
                     break;
                 // Unsigned hexadecimal integer
                 case 'x':
-                    bytes_printed += rprintf_hex(va_arg(ap, uint64_t), false, true);
+                    if (_long) bytes_printed += rprintf_hex_64(va_arg(ap, uint64_t), false, true);
+                    else bytes_printed += rprintf_hex_32(va_arg(ap, uint32_t), false, true);
                     break;
                 // Unsigned hexadecimal integer (uppercase)
                 case 'X':
-                    bytes_printed += rprintf_hex(va_arg(ap, uint64_t), true, true);
-                    break;
-                // Decimal floating point, lowercase
-                case 'f':
-                    bytes_printed += rprintf_float(va_arg(ap, double), false, false);
-                    break;
-                // Decimal floating point, uppercase
-                case 'F':
-                    bytes_printed += rprintf_float(va_arg(ap, double), false, true);
-                    break;
-                // Scientific notation (mantissa/exponent), lowercase
-                case 'e':
-                    bytes_printed += rprintf_sci(va_arg(ap, uint64_t), false);
-                    break;
-                // Scientific notation (mantissa/exponent), uppercase
-                case 'E':
-                    bytes_printed += rprintf_sci(va_arg(ap, uint64_t), false);
-                    break;
-                // Use the shortest representation: %e or %f
-                case 'g':
-                    break;
-                // Use the shortest representation: %E or %F
-                case 'G':
-                    break;
-                // Hexadecimal floating point, lowercase
-                case 'a':
-                    bytes_printed += rprintf_float(va_arg(ap, double), true, false);
-                    break;
-                // Hexadecimal floating point, uppercase
-                case 'A':
-                    bytes_printed += rprintf_float(va_arg(ap, double), true, true);
+                    if (_long) bytes_printed += rprintf_hex_64(va_arg(ap, uint64_t), true, true);
+                    else bytes_printed += rprintf_hex_32(va_arg(ap, uint32_t), true, true);
                     break;
                 // Character
                 case 'c':
@@ -307,7 +475,7 @@ int rprintf(const char *restrict format, va_list ap) {
                     break;
                 // Pointer address
                 case 'p':
-                    bytes_printed += rprintf_hex(va_arg(ap, uint64_t), true, true);
+                    bytes_printed += rprintf_hex_64(va_arg(ap, uint64_t), true, true);
                     break;
                 // Nothing printed
                 // The corresponding argument must be a pointer to a signed int
