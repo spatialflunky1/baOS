@@ -20,6 +20,7 @@ make qemu
 ```
 bear -- make
 ```
+* printf does not support: floats/doubles, scientific notation, and any flag other than long specifier and conversion specifier
 ## Note 2:
 * Until the OS is back at a functional state, all commits will be to the main branch
 ## Build Dependencies
