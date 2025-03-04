@@ -377,8 +377,8 @@ void print_elf_info(void* KernelHeader) {
     print(L"  Version: ");
     print_hex(header->e_version, true);
     print(L"\r\n");
-    // Entry point address
-    print(L"  Entry point address: ");
+    // Entry point offset
+    print(L"  Entry point offset: ");
     print_hex(header->e_entry, true);
     print(L"\r\n");
     // Start of program headers
