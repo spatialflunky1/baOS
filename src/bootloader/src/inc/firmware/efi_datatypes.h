@@ -34,8 +34,7 @@
 //
 #define EFI_PAGE_MASK  0xFFF
 #define EFI_PAGE_SHIFT 12
-#define EFI_SIZE_TO_PAGES(a)  \
-    ( ((a) >> EFI_PAGE_SHIFT) + ((a) & EFI_PAGE_MASK ? 1 : 0) )
+#define EFI_PAGE_SIZE 4096
 
 //
 // Miscellaneous
@@ -47,6 +46,7 @@
 // Max type digits
 #define UINT64_DEC_MAXDIGIT 20
 #define UINT64_HEX_MAXDIGIT 16
+#define UINT64_MAX          0xFFFFFFFFFFFFFFFF
 
 // Boolean values
 #define true 1

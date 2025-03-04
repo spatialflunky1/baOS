@@ -36,7 +36,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     // To store the address to the root of the boot volume
     EFI_FILE_PROTOCOL*               RootFileSystem                   = NULL;
     // Address that the kernel is loaded into, and which the entry function is located 
-    EFI_PHYSICAL_ADDRESS*            KernelEntryPoint                 = NULL;
+    EFI_PHYSICAL_ADDRESS             KernelEntryPoint                 = 0;
     // Function pointer to load the function as referenced in the previous comment
     int (*kernel_entry_point)(KERNEL_BOOT_INFO* BootInfo)             = NULL;
     // Contains info on the currently operating firmware memor map
@@ -249,7 +249,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     //
     // Load Kernel
     //
-    status = load_kernel(RootFileSystem, KERNEL_FILEPATH, KernelEntryPoint, SystemTable);
+    status = load_kernel(RootFileSystem, KERNEL_FILEPATH, &KernelEntryPoint, SystemTable);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to load baOS kernel\r\n");
         while(1);
@@ -330,7 +330,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     //
     // Enter Kernel
     //
-    kernel_entry_point = (int (*)(KERNEL_BOOT_INFO* BootInfo))*KernelEntryPoint;
+    kernel_entry_point = (int (*)(KERNEL_BOOT_INFO* BootInfo))KernelEntryPoint;
 
     // The kernel is compiled using the System V calling convention which does not match the bootloader
     // BootInfo must therefore be passed into the RDI register directly

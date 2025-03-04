@@ -31,6 +31,7 @@ CFLAGS := \
 			-ffreestanding \
 		  -fno-stack-protector \
 		  -mno-red-zone \
+			-mcmodel=kernel \
 		  -I${INC_DIR} \
 		  -Wall \
 		  -Wextra \
@@ -47,8 +48,7 @@ CFLAGS := \
 # -T src/kernel/kernel.ld: Specify linker script for layout
 LDFLAGS := \
 		   -ffreestanding \
-		   -nostdlib \
-			 -no-pie \
+			 -nostdlib \
 		   -T src/kernel/kernel.ld
 
 all: obj bin bin/${OUTFILE}

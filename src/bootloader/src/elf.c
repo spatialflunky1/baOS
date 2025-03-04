@@ -189,120 +189,35 @@ EFI_STATUS read_elf_headers(EFI_SYSTEM_TABLE*  SystemTable,
     return status;
 }
 
-EFI_STATUS load_segment(EFI_SYSTEM_TABLE* SystemTable, 
-                        EFI_FILE_PROTOCOL* KernelImage, 
-                        Elf64_Phdr* ProgramHeader) {
+EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable, 
+                                 EFI_FILE_PROTOCOL*    KernelImage, 
+                                 Elf64_Ehdr*           KernelHeader, 
+                                 Elf64_Phdr*           KernelProgramHeaders,
+                                 EFI_PHYSICAL_ADDRESS* KernelEntryPoint) {
     // To store the returned status of various functions
-    EFI_STATUS status                  = EFI_SUCCESS;
-    // To store the size of different buffers being addressed
-    UINT64     BufferSize              = 0;
-    // The buffer containing the contents of the program segment to be retrieved and stored in memory
-    void*      ProgramSegmentBuffer    = NULL;
-    // The number of pages to allocate as calculated by the size specified to occupy in memory
-    UINT64     SegmentPageCount        = EFI_SIZE_TO_PAGES(ProgramHeader->p_memsz);
-    // Values to store info about the ELF post segment zero fill area
-    EFI_PHYSICAL_ADDRESS ZeroFillStart = ProgramHeader->p_paddr + ProgramHeader->p_filesz;
-    UINT64               ZeroFillSize  = ProgramHeader->p_memsz - ProgramHeader->p_filesz;
-    
-    // Set kernel file pointer to program segment location
-    status = KernelImage->SetPosition((struct EFI_FILE_PROTOCOL*)KernelImage, ProgramHeader->p_offset);
-    if (EFI_ERROR(status)) {
-        print(L"Fatal: Error setting kernel file position to program segment offset: ");
-        print_hex(ProgramHeader->p_offset, true);
-        print(L"\r\n");
-        print(L"Err ");
-        print_hex(status, true);
-        print(L"\r\n");
-    }
-
-    if (ProgramHeader->p_filesz > 0) {
-        // The buffer read will be the exact size of the segment on file
-        BufferSize = ProgramHeader->p_filesz;
-
-        // Allocate memory to the buffer that will store the program segment
-        status = SystemTable->BootServices->AllocatePool(EfiLoaderData,
-                                                         BufferSize,
-                                                         &ProgramSegmentBuffer);
-        if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while allocating memory for a kernel program segment buffer\r\n");
-            print_hex(status, true);
-            print(L"\r\n");
-            return status;
-        }
-    
-        // Allocate pages in memory to store the program segment stored in the buffer
-        status = SystemTable->BootServices->AllocatePages(AllocateAddress,
-                                                          EfiLoaderData,
-                                                          SegmentPageCount,
-                                                          (EFI_PHYSICAL_ADDRESS*)&(ProgramHeader->p_paddr));
-        if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while allocating pages for a kernel program segment at:\r\n");
-            print_hex(ProgramHeader->p_paddr, true);
-            print(L"\r\n");
-            print_hex(status, true);
-            print(L"\r\n");
-            return status;
-        }
-
-        // Read the segment into the buffer allocated previously
-        status = KernelImage->Read((struct EFI_FILE_PROTOCOL*)KernelImage,
-                                   &BufferSize,
-                                   (void*)ProgramSegmentBuffer);
-        if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while reading a program segment from the kernel image file\r\n");
-            print_hex(status, true);
-            print(L"\r\n");
-            return status;
-        }
-
-        // Copy the contents of the buffer into the allocated pages
-        status = SystemTable->BootServices->CopyMem((void*)ProgramHeader->p_paddr,
-                                                    ProgramSegmentBuffer,
-                                                    ProgramHeader->p_filesz);
-        if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while copying memory from program segment buffer into memory page\r\n");
-            print_hex(status, true);
-            print(L"\r\n");
-            return status;
-        }
-    
-        // Cleanup the memory allocated for the buffer
-        status = SystemTable->BootServices->FreePool((void*)ProgramSegmentBuffer);
-        if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while freeing the buffer for a kernel program segment\r\n");
-            print_hex(status, true);
-            print(L"\r\n");
-            return status;
-        }
-    }
-
-    // The ELF standard requires all memory following the segment to be zero filled
-    // e.g. the location past the segment when the size in memory exceeds the filesize
-    if (ZeroFillSize > 0) {
-        status = SystemTable->BootServices->SetMem((void*)ZeroFillStart,
-                                                   ZeroFillSize,
-                                                   0);
-        if (EFI_ERROR(status)) {
-            print(L"Fatal: Error while zero filling the memory location after a kernel program segment\r\n");
-            print_hex(status, true);
-            print(L"\r\n");
-            return status;
-        }
-    }
-
-    return status;
-}
-
-EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE* SystemTable, 
-                                 EFI_FILE_PROTOCOL* KernelImage, 
-                                 Elf64_Ehdr* KernelHeader, 
-                                 Elf64_Phdr* KernelProgramHeaders) {
-    // To store the returned status of various functions
-    EFI_STATUS status            = EFI_SUCCESS;
+    EFI_STATUS           status              = EFI_SUCCESS;
     // Contains the number of ELF program headers contained in the kernel image
-    UINT16     NumProgramHeaders = KernelHeader->e_phnum;
+    UINT16               NumProgramHeaders   = KernelHeader->e_phnum;
     // Keep track of the number of loadable program segments in the image
-    UINT16     NumSegmentsLoaded = 0;
+    UINT16               NumLoadableSegments = 0;
+    // Maximum alignment found in the program segments, starting with the default page alignment
+    UINT64               MaxAlignment        = EFI_PAGE_SIZE;
+    // Store the beginning and end address of the program headers
+    UINT64               HdrStart            = 0;
+    UINT64               HdrEnd              = 0;
+    // Store the range of memory to allocate for the page
+    UINT64               LowerMem            = UINT64_MAX;
+    UINT64               UpperMem            = 0;
+    // The number of pages to be allocated for the previous buffer
+    UINT64               NumPages            = 0;
+    // The buffer of pages for the kernel program segments
+    EFI_PHYSICAL_ADDRESS ProgramSegment_buf  = 0;
+    // The temporary buffer used to copy memory into pages
+    EFI_PHYSICAL_ADDRESS TempSegment_buf     = 0;
+    // To store the size of different buffers being addressed
+    UINT64               BufferSize          = 0;
+    // To locate the relative position inside the page buffer for kernel program segments
+    UINT64               RelativeOffset      = 0;
 
     // Exit when no program segments are found (e.g. empty kernel image)
     if (NumProgramHeaders == 0) {
@@ -311,29 +226,119 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE* SystemTable,
     }
 
     for (UINT16 SegNum = 0; SegNum < NumProgramHeaders; ++SegNum) {
-        // Load all segments that are marked for loading
-        if (KernelProgramHeaders[SegNum].p_type == PT_LOAD) {
-            status = load_segment(SystemTable,
-                                  KernelImage,
-                                  &KernelProgramHeaders[SegNum]);
-            if (EFI_ERROR(status)) {
-                return status;
-            }
-            ++NumSegmentsLoaded;
+        // Skip all segments that are not marked for loading
+        if (KernelProgramHeaders[SegNum].p_type != PT_LOAD) { continue; }
+        NumLoadableSegments++;
+        #ifdef __DEBUG__
+            print(L"  DEBUG: Loading segment (p): ");
+            print_hex(KernelProgramHeaders[SegNum].p_paddr, true);
+            print(L"  (v): ");
+            print_hex(KernelProgramHeaders[SegNum].p_vaddr, true);
+            print(L"\r\n");
+        #endif
+        
+        // Save the maximum alignment
+        if (MaxAlignment < KernelProgramHeaders[SegNum].p_align) {
+            MaxAlignment = KernelProgramHeaders[SegNum].p_align;
         }
+        // Mark the beginning and end of the header (aligned)
+        HdrStart = KernelProgramHeaders[SegNum].p_vaddr;
+        HdrEnd   = HdrStart + KernelProgramHeaders[SegNum].p_memsz + (MaxAlignment - 1);
+        // Limit the previous range to the current alignment
+        HdrStart &= ~(MaxAlignment-1);
+        HdrEnd   &= ~(MaxAlignment-1);
+        // Expand the memory range if necessary
+        if (HdrStart < LowerMem) { LowerMem = HdrStart; }
+        if (HdrEnd   > UpperMem) { UpperMem = HdrEnd;   }
     }
 
-    if (NumSegmentsLoaded == 0) {
+    if (NumLoadableSegments == 0) {
         print(L"Fatal: No LOADABLE program segments found within the kernel image\r\n");
         return EFI_NOT_FOUND;
     }
+
+    //
+    // Allocate the pages as computed in the previous loop
+    //
+    NumPages = ((UpperMem-LowerMem) + (EFI_PAGE_SIZE-1)) / EFI_PAGE_SIZE;
+    status = SystemTable->BootServices->AllocatePages(AllocateAnyPages, 
+                                                      EfiLoaderCode, 
+                                                      NumPages, 
+                                                      &ProgramSegment_buf);
+    if (EFI_ERROR(status)) {
+        print(L"Fatal: Failed to allocate pages for the kernel program segments\r\n");
+        return status;
+    }
+
+    // Zero set the entire buffer to cover the requirement that the area post-segment must be zero filled
+    status = SystemTable->BootServices->SetMem((void*)ProgramSegment_buf, UpperMem-LowerMem, 0);
+    if (EFI_ERROR(status)) {
+        print(L"Fatal: Error while zero setting the pages allocated for the kernel program segments\r\n");
+        return status;
+    }
+
+    for (UINT16 SegNum = 0; SegNum < NumProgramHeaders; ++SegNum) {
+        // Skip all segments that are not marked for loading
+        if (KernelProgramHeaders[SegNum].p_type != PT_LOAD) { continue; }
+
+        //
+        // Copy segment to the newly allocated pages
+        //
+        
+        // Allocate temporary buffer
+        BufferSize = KernelProgramHeaders[SegNum].p_filesz;
+        status = SystemTable->BootServices->AllocatePool(EfiLoaderData,
+                                                         BufferSize,
+                                                         (void**)&TempSegment_buf);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Failed to allocate a temporary buffer to store the kernel program segment\r\n");
+            return status;
+        }
+
+        // Set kernel image to location of program segment
+        status = KernelImage->SetPosition((struct EFI_FILE_PROTOCOL*)KernelImage,
+                                          KernelProgramHeaders[SegNum].p_offset);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Error setting position of kernel image file pointer\r\n");
+            return status;
+        }
+
+        // Read segment into temp buffer
+        status = KernelImage->Read((struct EFI_FILE_PROTOCOL*)KernelImage,
+                                   &BufferSize,
+                                   (void*)TempSegment_buf);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Error reading from kernel image file\r\n");
+            return status;
+        }
+
+        // Copy temp buffer into page buffer
+        RelativeOffset = KernelProgramHeaders[SegNum].p_vaddr - LowerMem;
+        status = SystemTable->BootServices->CopyMem((void*)(ProgramSegment_buf + RelativeOffset),
+                                                    (void*)TempSegment_buf,
+                                                    KernelProgramHeaders[SegNum].p_filesz);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Error copying memory from kernel program header temp buffer to page buffer\r\n");
+            return status;
+        }
+        
+        // Free temp buffer
+        status = SystemTable->BootServices->FreePool((void*)TempSegment_buf);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Error while freeing temp buffer for kernel program segment\r\n");
+            return status;
+        }
+    }
+
+    // Update the kernel entry point to match the loaded kernel
+    *KernelEntryPoint = (EFI_PHYSICAL_ADDRESS)((UINT8*)ProgramSegment_buf + (KernelHeader->e_entry - LowerMem));
 
     return status;
 }
 
 void print_elf_info(void* KernelHeader) {
     Elf64_Ehdr* header = (Elf64_Ehdr*)KernelHeader;
-    print(L"Debug: Kernel ELF header info:\r\n");
+    print(L"DEBUG: Kernel ELF header info:\r\n");
     
     // Magic
     print(L"  Magic: ");

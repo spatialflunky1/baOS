@@ -118,9 +118,6 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
         print_elf_info(KernelHeader);
     #endif
 
-    // Assign the variable that keeps track of the kernel's entry point address
-    *KernelEntryPoint = ((Elf64_Ehdr*)KernelHeader)->e_entry;
-
     //
     // Load the segments of the kernel into memory
     //
@@ -129,7 +126,11 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
         print(L"DEBUG: Loading kernel image program segments\r\n");
     #endif
 
-    status = load_program_segments(SystemTable, KernelImage, KernelHeader, KernelProgramHeaders);
+    status = load_program_segments(SystemTable, 
+                                   KernelImage, 
+                                   KernelHeader, 
+                                   KernelProgramHeaders, 
+                                   KernelEntryPoint);
     if (EFI_ERROR(status)) { 
         print(L"Fatal: Error loading kernel image program segments\r\n");
         return status;
