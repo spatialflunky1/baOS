@@ -230,9 +230,7 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
         if (KernelProgramHeaders[SegNum].p_type != PT_LOAD) { continue; }
         NumLoadableSegments++;
         #ifdef __DEBUG__
-            print(L"  DEBUG: Loading segment (p): ");
-            print_hex(KernelProgramHeaders[SegNum].p_paddr, true);
-            print(L"  (v): ");
+            print(L"  DEBUG: Loading segment (v): ");
             print_hex(KernelProgramHeaders[SegNum].p_vaddr, true);
             print(L"\r\n");
         #endif

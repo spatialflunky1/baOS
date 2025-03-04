@@ -255,64 +255,66 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
         while(1);
     }
 
-    //
-    // Get the firmware memory map
-    //
-    #ifdef __DEBUG__
-        print(L"DEBUG: Saving the current firmware memory map and exiting EFI boot services\r\n");
-    #endif
-    // Request the memory map once to obtain the size
-    status = SystemTable->BootServices->GetMemoryMap(&MemoryMapSize,
-                                                     (struct EFI_MEMORY_DESCRIPTOR*)MemoryMap,
-                                                     &MemoryMapKey,
-                                                     &DescriptorSize,
-                                                     &DescriptorVersion);
-    // The second conditional is to ignore the error given when the buffer is too small
-    // This is because the buffer size starts with 0 in order to obtain the required size
-    if (EFI_ERROR(status) && ((status & 0x5) == 0)) {
-        print(L"Fatal: Error while requesting the memory map from firmware\r\n");
-        print_hex(status, true);
-        print(L"\r\n");
-        while(1);
-    }
-
-    // Allocate a buffer to contain the map using the previously obtained size
-    // 2 more page memory descriptors may be created while allocated the new pool of memory
-    MemoryMapSize += (2 * DescriptorSize);
-    status = SystemTable->BootServices->AllocatePool(EfiLoaderData,
-                                                     MemoryMapSize,
-                                                     (void**)&MemoryMap);
-    if (EFI_ERROR(status)) {
-        print(L"Fatal: Error while allocating memory for the buffer to store the firmware memory map\r\n");
-        print_hex(status, true);
-        print(L"\r\n");
-        while(1);
-    }
-
-    // Read the memory map into the previously allocated buffer
-    status = SystemTable->BootServices->GetMemoryMap(&MemoryMapSize,
-                                                     (struct EFI_MEMORY_DESCRIPTOR*)MemoryMap,
-                                                     &MemoryMapKey,
-                                                     &DescriptorSize,
-                                                     &DescriptorVersion);
-    if (EFI_ERROR(status)) {
-        print(L"Fatal: Error while requesting the memory map from firmware\r\n");
-        print_hex(status, true);
-        print(L"\r\n");
-        while(1);
-    }
     /*-------------------------------WARNING-------------------------------
-     * FROM THIS POINT ANY MESSAGE PRINTED WILL AFFECT THE MemoryMapKey AND
-     * CAUSE ExitBootServices TO FAIL
-     *
-     * Furthermore, any firmware print statements after a successful call to
+     * Any firmware print statements after a successful call to
      * ExitBootServices will cause a crash
      *---------------------------------------------------------------------*/
 
     //
-    // Exit EFI boot services
+    // Get the firmware memory map and exit EFI boot services (allow for 5 retries)
     //
-    status = SystemTable->BootServices->ExitBootServices(ImageHandle, MemoryMapKey);
+    #ifdef __DEBUG__
+        print(L"DEBUG: Saving the current firmware memory map and exiting EFI boot services\r\n");
+    #endif
+    int retries = 5;
+    while (EFI_ERROR(SystemTable->BootServices->ExitBootServices(ImageHandle, MemoryMapKey)) && retries != 0) {
+        // Free the memory map buffer (ignore errors, may be empty)
+        SystemTable->BootServices->FreePool((void*)MemoryMap);
+        DescriptorSize = 0;
+        
+        // Request the memory map once to obtain the size
+        status = SystemTable->BootServices->GetMemoryMap(&MemoryMapSize,
+                                                     (struct EFI_MEMORY_DESCRIPTOR*)MemoryMap,
+                                                     &MemoryMapKey,
+                                                     &DescriptorSize,
+                                                     &DescriptorVersion);
+        // The second conditional is to ignore the error given when the buffer is too small
+        // This is because the buffer size starts with 0 in order to obtain the required size
+        if (EFI_ERROR(status) && ((status & 0x5) == 0)) {
+            print(L"Fatal: Error while requesting the memory map from firmware\r\n");
+            print_hex(status, true);
+            print(L"\r\n");
+            while(1);
+        }
+
+        // Allocate a buffer to contain the map using the previously obtained size
+        // 2 more page memory descriptors may be created while allocated the new pool of memory
+        MemoryMapSize += (2 * DescriptorSize);
+        status = SystemTable->BootServices->AllocatePool(EfiLoaderData,
+                                                     MemoryMapSize,
+                                                     (void**)&MemoryMap);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Error while allocating memory for the buffer to store the firmware memory map\r\n");
+            print_hex(status, true);
+            print(L"\r\n");
+            while(1);
+        }
+
+        // Read the memory map into the previously allocated buffer
+        status = SystemTable->BootServices->GetMemoryMap(&MemoryMapSize,
+                                                     (struct EFI_MEMORY_DESCRIPTOR*)MemoryMap,
+                                                     &MemoryMapKey,
+                                                     &DescriptorSize,
+                                                     &DescriptorVersion);
+        if (EFI_ERROR(status)) {
+            print(L"Fatal: Error while requesting the memory map from firmware\r\n");
+            print_hex(status, true);
+            print(L"\r\n");
+            while(1);
+        }
+
+        retries--;
+    }
     if (EFI_ERROR(status)) {
         print(L"Fatal: An unexpected error ocurred while exiting EFI boot services\r\n");
         print_hex(status, true);
@@ -335,7 +337,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     // The kernel is compiled using the System V calling convention which does not match the bootloader
     // BootInfo must therefore be passed into the RDI register directly
     __asm__ volatile ("mov %0, %%rdi" :: "r"(&BootInfo));
-
+    
     // Can still pass as a parameter as a just in case measure
     int return_code = kernel_entry_point(&BootInfo);
     
