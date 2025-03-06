@@ -14,7 +14,7 @@ int main(KERNEL_BOOT_INFO* BootInfo) {
     // Switch from the firmware GDT to the kernel's
     // -------------------------------------------- 
     klog(InfoMsg, true, "Initializing GDT... ");
-    // gdt_init(); 
+    gdt_init(); 
     klog(InfoMsg, false, "Done!\n");
     
     // ----------------------------------------

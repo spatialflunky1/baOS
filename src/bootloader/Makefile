@@ -34,8 +34,6 @@ CFLAGS := -ffreestanding \
 	      -mno-red-zone \
 	      -I${INC_DIR} \
 	      -target x86_64-unknown-windows \
-		  -DDEBUG \
-		  -DINFO \
 		  -Wall \
 		  -Wextra \
 		  -Wmissing-prototypes \

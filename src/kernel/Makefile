@@ -12,6 +12,8 @@ CC := clang
 #
 C_SRC = $(wildcard src/*/*.c src/drivers/*/*.c)
 OBJ = $(C_SRC:src/%.c=obj/%.o)
+ASM_SRC = $(wildcard src/*/*.s)
+ASM_OBJ = $(ASM_SRC:src/%.s=obj/%.o)
 INC_DIR := src/inc
 OUTFILE := baos_kernel.elf
 
@@ -65,7 +67,7 @@ bin:
 #
 # Kernel build target
 #
-bin/${OUTFILE}: ${OBJ}
+bin/${OUTFILE}: ${OBJ} ${ASM_OBJ}
 	${CC} -o $@ ${LDFLAGS} $^
 
 #
@@ -73,6 +75,9 @@ bin/${OUTFILE}: ${OBJ}
 # 
 obj/%.o: src/%.c
 	${CC} ${CFLAGS} -c $< -o $@
+
+obj/%.o: src/%.s
+	nasm $< -f elf64 -o $@
 
 #
 # Clean the source tree
