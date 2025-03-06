@@ -5,6 +5,7 @@
 #include <efi.h>
 #include <stdio.h>
 #include <drivers/video/video.h>
+#include <kernel/messages.h>
 
 #ifndef KVER
     #define KVER "0.0.0"

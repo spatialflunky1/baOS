@@ -1,11 +1,12 @@
 #include <stdio.h>
 
-int printf(const char *restrict format, ...) {
+int printf(const char* restrict format, ...) {
+    // Load the variable arguments
     va_list ap;
     va_start(ap, format);
-    
+    // Pass the string and arguments to vprintf
     int bytes_printed = vprintf(format, ap); 
-
+    // Close the variable argument list
     va_end(ap);
 
     return bytes_printed;
