@@ -20,6 +20,9 @@ int main(KERNEL_BOOT_INFO* BootInfo) {
     // ----------------------------------------
     // Initialize the IDT and enable interrupts
     // ----------------------------------------
+    klog(InfoMsg, true, "Initializing IDT and enabling interrupts... ");
+    idt_init(BootInfo->KernelBase);
+    klog(InfoMsg, false, "Done!");
   
     // Halt execution
     while (true) { 

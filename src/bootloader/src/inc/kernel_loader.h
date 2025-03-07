@@ -19,6 +19,7 @@ typedef struct {
     UINT64                      MemoryMapSize;
     UINT64                      MemoryMapDescriptorSize;
     KERNEL_BOOT_VIDEO_MODE_INFO VideoModeInfo;
+    void*                       KernelBase;
 } KERNEL_BOOT_INFO;
 
 //
@@ -28,6 +29,7 @@ typedef struct {
 EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem, 
                        CHAR16* KernelFilename, 
                        EFI_PHYSICAL_ADDRESS* KernelEntryPoint, 
-                       EFI_SYSTEM_TABLE* SystemTable);
+                       EFI_SYSTEM_TABLE* SystemTable,
+                       EFI_PHYSICAL_ADDRESS* ProgramSegment_buf);
 
 #endif

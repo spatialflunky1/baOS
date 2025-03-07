@@ -47,6 +47,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     UINT32                           DescriptorVersion                = 0;
     // Info from the bootloader that needs to be transfered to the kernel will be kept in this structure
     KERNEL_BOOT_INFO                 BootInfo;
+    // The buffer of pages for the kernel program segments
+    EFI_PHYSICAL_ADDRESS             ProgramSegment_buf               = 0;
 
     // Assign statically defined sys_table variable for use with EFI functions
     initializeVideoSysTableVar(SystemTable);
@@ -249,11 +251,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     //
     // Load Kernel
     //
-    status = load_kernel(RootFileSystem, KERNEL_FILEPATH, &KernelEntryPoint, SystemTable);
+    status = load_kernel(RootFileSystem, KERNEL_FILEPATH, &KernelEntryPoint, SystemTable, &ProgramSegment_buf);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Unable to load baOS kernel\r\n");
         while(1);
     }
+
+    BootInfo.KernelBase = (void*)ProgramSegment_buf;
 
     /*-------------------------------WARNING-------------------------------
      * Any firmware print statements after a successful call to

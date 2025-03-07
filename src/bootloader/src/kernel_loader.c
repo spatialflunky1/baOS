@@ -3,7 +3,8 @@
 EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem, 
                        CHAR16* KernelFilename, 
                        EFI_PHYSICAL_ADDRESS* KernelEntryPoint, 
-                       EFI_SYSTEM_TABLE* SystemTable) {
+                       EFI_SYSTEM_TABLE* SystemTable,
+                       EFI_PHYSICAL_ADDRESS* ProgramSegment_buf) {
     // To store the returned status of various functions
     EFI_STATUS         status               = EFI_SUCCESS;
     // Stores the address of the loaded kernel image file in memory
@@ -130,7 +131,8 @@ EFI_STATUS load_kernel(EFI_FILE_PROTOCOL* RootFileSystem,
                                    KernelImage, 
                                    KernelHeader, 
                                    KernelProgramHeaders, 
-                                   KernelEntryPoint);
+                                   KernelEntryPoint,
+                                   ProgramSegment_buf);
     if (EFI_ERROR(status)) { 
         print(L"Fatal: Error loading kernel image program segments\r\n");
         return status;

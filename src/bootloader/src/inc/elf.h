@@ -93,7 +93,8 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
                                  EFI_FILE_PROTOCOL*    KernelImage, 
                                  Elf64_Ehdr*           KernelHeader, 
                                  Elf64_Phdr*           KernelProgramHeaders,
-                                 EFI_PHYSICAL_ADDRESS* KernelEntryPoint);
+                                 EFI_PHYSICAL_ADDRESS* KernelEntryPoint,
+                                 EFI_PHYSICAL_ADDRESS* KernelBase);
 void       print_elf_info(void* KernelHeader);
 
 #endif

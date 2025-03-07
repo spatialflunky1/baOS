@@ -7,6 +7,7 @@
 #include <drivers/video/video.h>
 #include <kernel/messages.h>
 #include <cpu/gdt.h>
+#include <cpu/idt.h>
 
 #ifndef KVER
     #define KVER "0.0.0"
@@ -17,6 +18,7 @@ typedef struct {
     uint64_t               MemoryMapSize;
     uint64_t               MemoryMapDescriptorSize;
     BOOT_VIDEO_MODE_INFO   VideoModeInfo;
+    void*                  KernelBase; // The pointer to the beginning of the kernel buffer
 } KERNEL_BOOT_INFO;
 
 #endif

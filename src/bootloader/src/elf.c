@@ -193,7 +193,8 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
                                  EFI_FILE_PROTOCOL*    KernelImage, 
                                  Elf64_Ehdr*           KernelHeader, 
                                  Elf64_Phdr*           KernelProgramHeaders,
-                                 EFI_PHYSICAL_ADDRESS* KernelEntryPoint) {
+                                 EFI_PHYSICAL_ADDRESS* KernelEntryPoint,
+                                 EFI_PHYSICAL_ADDRESS* ProgramSegment_buf) {
     // To store the returned status of various functions
     EFI_STATUS           status              = EFI_SUCCESS;
     // Contains the number of ELF program headers contained in the kernel image
@@ -210,8 +211,6 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
     UINT64               UpperMem            = 0;
     // The number of pages to be allocated for the previous buffer
     UINT64               NumPages            = 0;
-    // The buffer of pages for the kernel program segments
-    EFI_PHYSICAL_ADDRESS ProgramSegment_buf  = 0;
     // The temporary buffer used to copy memory into pages
     EFI_PHYSICAL_ADDRESS TempSegment_buf     = 0;
     // To store the size of different buffers being addressed
@@ -262,14 +261,14 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
     status = SystemTable->BootServices->AllocatePages(AllocateAnyPages, 
                                                       EfiLoaderCode, 
                                                       NumPages, 
-                                                      &ProgramSegment_buf);
+                                                      ProgramSegment_buf);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Failed to allocate pages for the kernel program segments\r\n");
         return status;
     }
 
     // Zero set the entire buffer to cover the requirement that the area post-segment must be zero filled
-    status = SystemTable->BootServices->SetMem((void*)ProgramSegment_buf, UpperMem-LowerMem, 0);
+    status = SystemTable->BootServices->SetMem((void*)*ProgramSegment_buf, UpperMem-LowerMem, 0);
     if (EFI_ERROR(status)) {
         print(L"Fatal: Error while zero setting the pages allocated for the kernel program segments\r\n");
         return status;
@@ -312,7 +311,7 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
 
         // Copy temp buffer into page buffer
         RelativeOffset = KernelProgramHeaders[SegNum].p_vaddr - LowerMem;
-        status = SystemTable->BootServices->CopyMem((void*)(ProgramSegment_buf + RelativeOffset),
+        status = SystemTable->BootServices->CopyMem((void*)((*ProgramSegment_buf) + RelativeOffset),
                                                     (void*)TempSegment_buf,
                                                     KernelProgramHeaders[SegNum].p_filesz);
         if (EFI_ERROR(status)) {
@@ -329,7 +328,7 @@ EFI_STATUS load_program_segments(EFI_SYSTEM_TABLE*     SystemTable,
     }
 
     // Update the kernel entry point to match the loaded kernel
-    *KernelEntryPoint = (EFI_PHYSICAL_ADDRESS)((UINT8*)ProgramSegment_buf + (KernelHeader->e_entry - LowerMem));
+    *KernelEntryPoint = (EFI_PHYSICAL_ADDRESS)((UINT8*)(*ProgramSegment_buf) + (KernelHeader->e_entry - LowerMem));
 
     return status;
 }
