@@ -1,8 +1,7 @@
 #include <cpu/idt.h>
 
-// Normal non-interrupt function forward declarations
+// Function forward declaration (necessary prototype definition)
 void idt_set_descriptor(uint8_t vect, void* isr, uint8_t flags);
-void init_isr_stub_table(void);
 
 void idt_init(void* KernelBase) {
     // ------------------------
